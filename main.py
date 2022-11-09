@@ -14,7 +14,7 @@ def main():
         [
             "ffmpeg",
             "-i",
-            rtsp_path,  # Input path
+            rtsp_path,
             "-vframes",
             "1",  # Only grab one frame
             f"{datetime.now().strftime('%Y%m%d-%H%M%S')}.png",  # Output file
