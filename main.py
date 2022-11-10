@@ -1,6 +1,6 @@
 import config
+import glob
 import subprocess
-import time
 from datetime import datetime
 
 
@@ -21,6 +21,7 @@ def create_timelapse(force_framerate=False):
     # ffmpeg -r 60 -pattern_type glob -i "*.png" output/<output>
     if force_framerate:
         framerate = "60"
+        print(f"Creating timelapse at {framerate}fps")
         subprocess.run(
             [
                 "ffmpeg",
@@ -34,6 +35,7 @@ def create_timelapse(force_framerate=False):
             ]
         )
     else:
+        print(f"Creating a normal timelapse")
         subprocess.run(
             [
                 "ffmpeg",
@@ -65,9 +67,13 @@ def main():
         ]
     )
 
-    # Create the timelapse
-    create_timelapse()
-    create_timelapse(force_framerate=True)
+    # Only create a timelapse once we have a weeks worth of photos
+    image_counter = len(glob.glob1(images_directory, "*.png"))
+    expected_number_of_photos = 168
+    if image_counter == expected_number_of_photos:
+        # Create the timelapse
+        create_timelapse()
+        create_timelapse(force_framerate=True)
 
 
 if __name__ == "__main__":
