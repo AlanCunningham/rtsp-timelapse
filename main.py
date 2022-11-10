@@ -79,7 +79,7 @@ def main():
 
     # Only create a timelapse once we have a weeks worth of photos
     image_files = glob.glob1(images_directory, "*.png")
-    expected_number_of_photos = len(image_files)
+    expected_number_of_photos = 168
     if len(image_files) == expected_number_of_photos:
         # Create the timelapse
         normal_timelapse_filepath = create_timelapse()
