@@ -1,6 +1,7 @@
 import apprise
 import config
 import glob
+import os
 import subprocess
 from datetime import datetime
 
@@ -77,9 +78,9 @@ def main():
     )
 
     # Only create a timelapse once we have a weeks worth of photos
-    image_counter = len(glob.glob1(images_directory, "*.png"))
-    expected_number_of_photos = 168
-    if image_counter == expected_number_of_photos:
+    image_files = glob.glob1(images_directory, "*.png")
+    expected_number_of_photos = len(image_files)
+    if len(image_files) == expected_number_of_photos:
         # Create the timelapse
         normal_timelapse_filepath = create_timelapse()
         forced_fps_timelapse_filepath = create_timelapse(force_framerate=True)
@@ -91,12 +92,21 @@ def main():
             app.add(service)
 
         attachments = [
-            f"{normal_timelapse_filepath}",
-            f"{forced_fps_timelapse_filepath}",
+            normal_timelapse_filepath,
+            forced_fps_timelapse_filepath,
         ]
 
         # Send the message to the Apprise services
-        app.notify(body="Timelapse", title="app_title", attach=attachments)
+        print(f"Sending notification with {attachments}")
+        app.notify(body="Weekly timelapse", title="Timelapse", attach=attachments)
+
+        # Delete the images
+        print("Starting deletion")
+        for image_file in image_files:
+            image_filepath = f"{images_directory}/{image_file}"
+            if os.path.exists(image_filepath):
+                print(f"Deleting {image_filepath}")
+                os.remove(image_filepath)
 
 
 if __name__ == "__main__":
