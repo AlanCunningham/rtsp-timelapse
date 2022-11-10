@@ -1,3 +1,4 @@
+import apprise
 import config
 import glob
 import subprocess
@@ -15,6 +16,7 @@ def create_timelapse(force_framerate=False):
     :param force_framerate: Force the output to run at a different framerate
     than default (which is 24fps). If this is True, the output will be forced to
     60fps.
+    :returns: The filename of the timelapse video
     """
     # Use ffmpeg to stitch the images together into a timelapse
     # ffmpeg -pattern_type glob -i "*.png" output/<output>
@@ -22,6 +24,9 @@ def create_timelapse(force_framerate=False):
     if force_framerate:
         framerate = "60"
         print(f"Creating timelapse at {framerate}fps")
+        timelapse_filename = (
+            f"{datetime.now().strftime('%Y%m%d-%H%M%S')}_fps_{framerate}.mp4"
+        )
         subprocess.run(
             [
                 "ffmpeg",
@@ -36,6 +41,7 @@ def create_timelapse(force_framerate=False):
         )
     else:
         print(f"Creating a normal timelapse")
+        timelapse_filename = f"{datetime.now().strftime('%Y%m%d-%H%M%S')}.mp4"
         subprocess.run(
             [
                 "ffmpeg",
@@ -46,6 +52,7 @@ def create_timelapse(force_framerate=False):
                 f"{timelapse_directory}/{datetime.now().strftime('%Y%m%d-%H%M%S')}.mp4",
             ]
         )
+    return timelapse_filename
 
 
 def main():
@@ -72,8 +79,22 @@ def main():
     expected_number_of_photos = 168
     if image_counter == expected_number_of_photos:
         # Create the timelapse
-        create_timelapse()
-        create_timelapse(force_framerate=True)
+        normal_timelapse_filename = create_timelapse()
+        forced_fps_timelapse_filename = create_timelapse(force_framerate=True)
+
+        # Create an Apprise instance
+        app = apprise.Apprise()
+
+        for service in config.apprise_services:
+            app.add(service)
+
+        attachments = [
+            f"{timelapse_directory}/{normal_timelapse_filename}",
+            f"{timelapse_directory}/{forced_fps_timelapse_filename}",
+        ]
+
+        # Send the message to the Apprise services
+        app.notify(body="Timelapse", title="app_title", attach=attachments)
 
 
 if __name__ == "__main__":
