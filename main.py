@@ -16,7 +16,7 @@ def create_timelapse(force_framerate=False):
     :param force_framerate: Force the output to run at a different framerate
     than default (which is 24fps). If this is True, the output will be forced to
     60fps.
-    :returns: The filename of the timelapse video
+    :returns: The filepath of the timelapse video
     """
     # Use ffmpeg to stitch the images together into a timelapse
     # ffmpeg -pattern_type glob -i "*.png" output/<output>
@@ -27,6 +27,7 @@ def create_timelapse(force_framerate=False):
         timelapse_filename = (
             f"{datetime.now().strftime('%Y%m%d-%H%M%S')}_fps_{framerate}.mp4"
         )
+        timelapse_filepath = f"{timelapse_directory}/forced_fps/{timelapse_filename}"
         subprocess.run(
             [
                 "ffmpeg",
@@ -36,12 +37,13 @@ def create_timelapse(force_framerate=False):
                 "glob",
                 "-i",
                 f"{images_directory}/*.png",
-                f"{timelapse_directory}/{datetime.now().strftime('%Y%m%d-%H%M%S')}_fps_{framerate}.mp4",
+                f"{timelapse_directory}/forced_fps/{timelapse_filename}",
             ]
         )
     else:
         print(f"Creating a normal timelapse")
         timelapse_filename = f"{datetime.now().strftime('%Y%m%d-%H%M%S')}.mp4"
+        timelapse_filepath = f"{timelapse_directory}/normal_fps/{timelapse_filename}"
         subprocess.run(
             [
                 "ffmpeg",
@@ -49,10 +51,10 @@ def create_timelapse(force_framerate=False):
                 "glob",
                 "-i",
                 f"{images_directory}/*.png",
-                f"{timelapse_directory}/{datetime.now().strftime('%Y%m%d-%H%M%S')}.mp4",
+                f"{timelapse_directory}/normal_fps/{timelapse_filename}",
             ]
         )
-    return timelapse_filename
+    return timelapse_filepath
 
 
 def main():
@@ -79,8 +81,8 @@ def main():
     expected_number_of_photos = 168
     if image_counter == expected_number_of_photos:
         # Create the timelapse
-        normal_timelapse_filename = create_timelapse()
-        forced_fps_timelapse_filename = create_timelapse(force_framerate=True)
+        normal_timelapse_filepath = create_timelapse()
+        forced_fps_timelapse_filepath = create_timelapse(force_framerate=True)
 
         # Create an Apprise instance
         app = apprise.Apprise()
@@ -89,8 +91,8 @@ def main():
             app.add(service)
 
         attachments = [
-            f"{timelapse_directory}/{normal_timelapse_filename}",
-            f"{timelapse_directory}/{forced_fps_timelapse_filename}",
+            f"{normal_timelapse_filepath}",
+            f"{forced_fps_timelapse_filepath}",
         ]
 
         # Send the message to the Apprise services
