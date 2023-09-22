@@ -4,7 +4,7 @@ import glob
 import os
 import subprocess
 from datetime import datetime
-
+import cv2
 
 images_directory = "input"
 timelapse_directory = "output"
@@ -64,6 +64,14 @@ def main():
     rtsp_ip_address = config.rtsp_ip_address
     rtsp_path = f"rtsp://{rtsp_username}:{rtsp_password}@{rtsp_ip_address}/stream1"
 
+
+    #Use cv2 insted of ffmpeg to be compatible with an RTSP flow redirected following a port opening
+    cap = cv2.VideoCapture(rtsp_path)
+    ret, frame = cap.read()
+    cv2.imwrite(f"{images_directory}/{datetime.now().strftime('%Y%m%d-%H%M%S')}.png", frame)
+    cap.release()
+
+    """
     # Use ffmpeg to connect to the rtsp stream and save 1 frame
     # ffmpeg -i <stream> -vframes 1 <output>
     subprocess.run(
@@ -76,6 +84,7 @@ def main():
             f"{images_directory}/{datetime.now().strftime('%Y%m%d-%H%M%S')}.png",
         ]
     )
+    """
 
     # Only create a timelapse once we have a weeks worth of photos
     image_files = glob.glob1(images_directory, "*.png")
